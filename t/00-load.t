@@ -10,5 +10,6 @@ use-ok('Email::Sender::Transport::Null');
 use-ok('Email::Sender::Transport::Print');
 use-ok('Email::Sender::Transport::SMTP');
 use-ok('Email::Sender::Transport::Sendmail');
+use-ok('Email::Sender::Transport::Test');
 
 done-testing;
