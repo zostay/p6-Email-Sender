@@ -11,5 +11,6 @@ use-ok('Email::Sender::Transport::Print');
 use-ok('Email::Sender::Transport::SMTP');
 use-ok('Email::Sender::Transport::Sendmail');
 use-ok('Email::Sender::Transport::Test');
+use-ok('Email::Sender::Transport::Wrapper');
 
 done-testing;
