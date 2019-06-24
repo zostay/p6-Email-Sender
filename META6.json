@@ -1,0 +1,45 @@
+{
+    "name": "Email::Sender",
+    "version": "0.0.0",
+    "meta-version": "0",
+    "license": "Artistic-2.0",
+    "description": "Simple email sending library",
+    "perl": "6.c",
+    "support": {
+        "source": "git://github.com/zostay/p6-Email-Sender.git"
+    },
+    "source-url": "git://github.com/zostay/p6-Email-Sender.git",
+    "auth": "github:zostay",
+    "build-depends": [ ],
+    "providers": {
+        "Email::Sender": "lib/Email/Sender.pm6",
+        "Email::Sender::EasyTransport": "lib/Email/Sender/EasyTransport.pm6",
+        "Email::Sender::Role::CommonSending": "lib/Email/Sender/Role/CommonSending.pm6",
+        "Email::Sender::Simple": "lib/Email/Sender/Simple.pm6",
+        "Email::Sender::Success": "lib/Email/Sender/Success.pm6",
+        "Email::Sender::Success::Maildir": "lib/Email/Sender/Transport/Maildir.pm6",
+        "Email::Sender::Success::Partial": "lib/Email/Sender/Success/Partial.pm6",
+        "Email::Sender::Transport": "lib/Email/Sender/Transport.pm6",
+        "Email::Sender::Transport::Maildir": "lib/Email/Sender/Transport/Maildir.pm6",
+        "Email::Sender::Transport::Mbox": "lib/Email/Sender/Transport/Mbox.pm6",
+        "Email::Sender::Transport::Null": "lib/Email/Sender/Transport/Null.pm6",
+        "Email::Sender::Transport::Print": "lib/Email/Sender/Transport/Print.pm6",
+        "Email::Sender::Transport::SMTP": "lib/Email/Sender/Transport/SMTP.pm6",
+        "Email::Sender::Transport::Sendmail": "lib/Email/Sender/Transport/Sendmail.pm6",
+        "X::Email::Sender": "lib/X/Email/Sender.pm6",
+        "X::Email::Sender::Multi": "lib/X/Email/Sender.pm6"
+    },
+    "resources": [ ],
+    "authors": [
+        "Sterling Hanenkamp <hanenkamp@cpan.org>"
+    ],
+    "tags": [ ],
+    "depends": [
+        "Email::Address",
+        "Email::MIME"
+    ],
+    "test-depends": [
+        "Test",
+        "Test::META"
+    ],
+}
