@@ -22,7 +22,7 @@ role Email::Sender::Role::CommonSending does Email::Sender {
         my %envelope = self.prepare-envelope(|%env);
 
         try {
-            return self.send-email($email, %envelope);
+            return self.send-email($email, |%envelope);
 
             CATCH {
                 when X::Email::Sender::CommonSending -> $err {
