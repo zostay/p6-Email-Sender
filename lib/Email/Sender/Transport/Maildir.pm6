@@ -18,16 +18,16 @@ has Bool $.add-envelope-headers = True;
 has IO::Path $.dir = $*CWD.add('Maildir');
 
 method send-email(Email::MIME $email, :to(@orig-to), :$from --> Email::Sender::Success::Maildir:D) {
-    my $dupe = ...;
+    my $dupe = Email::MIME.new($email.Str);
 
     my @to;
     if $!add-envelope-headers {
-        $dupe.set-header('X-Email-Sender-From' =>
+        $dupe.header-set('X-Email-Sender-From',
             do with $from { $from } else { '-' }
         );
 
         @to = @orig-to.grep(*.defined);
-        $dupe.set-header('X-Email-Sender-To' =>
+        $dupe.header-set('X-Email-Sender-To',
             do if @to { @to } else { '-' }
         );
     }
@@ -62,9 +62,9 @@ method !ensure-maildir-exists() {
 }
 
 method !add-lines-header($email) {
-    return if $email.get-header("Lines");
-    my $lines = $email.get-body.trans("\n" => "\n");
-    $email.set-header("Lines", $lines);
+    return if $email.header("Lines");
+    my $lines = $email.body-str.lines.elems;
+    $email.header-set("Lines", $lines);
 }
 
 method !update-time() {
@@ -85,7 +85,7 @@ method !deliver-email($email) {
 
         my $string = $email.Str;
         $string ~~ s:g/\x0D\x0A/\x0A/;
-        $tmp-fh.print: $string;
+        $tmp-fh.print($string);
         $tmp-fh.close;
 
         CATCH {
@@ -95,10 +95,10 @@ method !deliver-email($email) {
         }
     }
 
-    my $target-name = $!dir.add('new', $tmp-filename);
+    my $target-name = $!dir.add('new').add($tmp-filename);
 
     try {
-        rename $!dir.add('tmp', $tmp-filename), $target-name;
+        rename $!dir.add('tmp').add($tmp-filename), $target-name;
 
         CATCH {
             when X::IO {
@@ -116,7 +116,7 @@ method !deliver-fh() {
     my ($filename, $fh);
     until $fh {
         $filename = join q{.}, $MAILDIR-TIME, $*PID, ++$MAILDIR-COUNTER, $hostname;
-        my $path = $!dir.add('tmp', $filename);
+        my $path = $!dir.add('tmp').add($filename);
 
         try {
             $fh = $path.open(:create, :exclusive, :w);
@@ -129,5 +129,5 @@ method !deliver-fh() {
         }
     }
 
-    \($filename, $fh);
+    $filename, $fh;
 }

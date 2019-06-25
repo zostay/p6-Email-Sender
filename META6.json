@@ -39,7 +39,8 @@
         "Email::MIME"
     ],
     "test-depends": [
+        "Temp::Path",
         "Test",
         "Test::META"
-    ],
+    ]
 }
