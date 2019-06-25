@@ -11,12 +11,13 @@ method send-email(Email::MIME $email, :@to, :$from --> Email::Sender::Success:D)
 
     try {
         if $fh.tell > 0 {
-            $fh.print("\n");
+            $fh.write("\n".encode('ascii'));
         }
 
-        $fh.print: self!from-line($email, $from);
-        $fh.print: self!escape-from-body($email);
-        $fh.print("\n") unless $email.Str.ends-with("\n");
+        $fh.write: self!from-line($email, $from);
+        $fh.write: self!escape-from-body($email);
+        $fh.write("\n".encode('ascii'))
+            unless $email.Str.ends-with("\n");
 
         self!close-fh($fh);
 
@@ -26,6 +27,8 @@ method send-email(Email::MIME $email, :@to, :$from --> Email::Sender::Success:D)
             }
         }
     }
+
+    self.success;
 }
 
 method !open-fh(IO::Path $filename --> IO::Handle:D) {
@@ -41,9 +44,10 @@ method !close-fh(IO::Handle $fh) {
 }
 
 method !escape-from-body($email) {
-    my $body = $email.body;
+    my $body = $email.body-str;
     $body ~~ s:g/^ ("From ")/> $0/;
-    $email.as-string;
+    $email.body-set($body);
+    $email.body;
 }
 
 my @dow = <Sun Mon Tue Wed Thu Fri Sat>;
@@ -59,7 +63,7 @@ method !from-line($email, $from) {
         $now.second,
         $now.year;
 
-    "From $from  $fromtime\n";
+    "From $from  $fromtime\n".encode('ascii');
 }
 
 method !getlock($fh, $fn) {
