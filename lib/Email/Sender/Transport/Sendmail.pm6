@@ -7,7 +7,7 @@ unit class Email::Sender::Transport::Sendmail does Email::Sender::Transport;
 
 has IO::Path $.sendmail;
 
-sub find-sendmail(Str:D $program-name = 'sendmail' --> IO::Path:D) {
+our sub find-sendmail(Str:D $program-name = 'sendmail' --> IO::Path:D) {
     my @path = $*SPEC.path.map(*.IO);
 
     if $program-name eq 'sendmail' {
@@ -18,38 +18,44 @@ sub find-sendmail(Str:D $program-name = 'sendmail' --> IO::Path:D) {
 
     for @path -> $dir {
         my $sendmail = $dir.add($program-name);
-        return $sendmail if $sendmail.x;
+
+        # TODO Is this $*KERNEL.name check really necessary?
+        return $sendmail
+            if $*KERNEL.name eq 'win32' ?? $sendmail.f !! $sendmail.x;
     }
 
     die "couldn't find a sendmail executable";
 }
 
 submethod BUILD(
-    :$!sendmail = find-sendmail('sendmail'),
+    IO::Path :$!sendmail = find-sendmail('sendmail'),
 ) {
 }
 
-method !sendmail-proc(:$from, :@to --> Proc) {
-    my $prog = $!sendmail;
+method !sendmail-proc(Str:D $email, :$from, :@to --> Proc) {
+    my $p = run $!sendmail, '-i', '-f', $from, '--', |@to, :in;
+    $p.in.print($email);
+    $p.in.close;
 
-    my $p = run $prog, '-i', '-f', $from, '--', |@to, :in;
+    if !$p {
+        die X::Email::Sender.new("couldn't run sendmail ($!sendmail): exited with code ($p.exitcode())")
+    }
 
-    die X::Email::Sender.new("couldn't run to sendmail ($prog): $!")
-        unless $p;
+    CATCH {
+        when X::Proc::Unsuccessful {
+            die X::Email::Sender.new("couldn't run sendmail ($!sendmail): $_");
+        }
+    }
 
-    return $p;
+    $p;
 }
 
 method send-email(Email::MIME $email, :$from, :@to) {
-    my $p = self!sendmail-proc(:@to, :$from);
-
     my $serial-email = $email.Str;
-    $serial-email ~~ s/\x0d\x0a/\x0a/;
+    $serial-email ~~ s/\x0d\x0a/\x0a/ unless $*KERNEL.name eq 'win32';
 
-    $p.in.print($serial-email)
-        or die X::Email::Sender.new("couldn't send message to sendmail: $!");
+    my $p = self!sendmail-proc($serial-email, :@to, :$from);
 
-    $p.in.close;
 
     self.success;
 }

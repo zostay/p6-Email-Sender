@@ -5,8 +5,6 @@ use Email::Sender::Role::CommonSending;
 unit package X::Email;
 
 class Sender is Exception does X::Email::Sender::CommonSending {
-    trusts Email::Sender::Role::CommonSending;
-
     subset NonBlankStr of Str where /\S/;
 
     has NonBlankStr $.message;

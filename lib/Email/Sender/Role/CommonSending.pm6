@@ -7,9 +7,12 @@ use Email::Sender::Success;
 role Email::Sender::Role::CommonSending { ... }
 
 role X::Email::Sender::CommonSending {
-    has @.recipients;
+    has @!recipients;
 
-    method !set-recipients(@recipients) {
+    method recipients(--> List) { @!recipients.List }
+
+    method set-recipients(@recipients) {
+        die "recipients already set" if @!recipients;
         @!recipients = @recipients;
     }
 }
@@ -25,10 +28,10 @@ role Email::Sender::Role::CommonSending does Email::Sender {
             return self.send-email($email, |%envelope);
 
             CATCH {
-                when X::Email::Sender::CommonSending -> $err {
-                    $err!set-recipients(%envelope<to>)
-                        if !$err.recipients;
-                    $err.rethrow;
+                when X::Email::Sender::CommonSending {
+                    .set-recipients(%envelope<to>)
+                        if !.recipients;
+                    .rethrow;
                 }
             }
         }
