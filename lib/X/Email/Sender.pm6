@@ -28,7 +28,7 @@ class Sender::Multi is X::Email::Sender {
         }
     }
 
-    method temporary(--> Bool:D) { all(@!failures).temporary }
-    method permanent(--> Bool:D) { all(@!failures).permanent }
+    method temporary(--> Bool:D) { ?all(@!failures).temporary }
+    method permanent(--> Bool:D) { ?all(@!failures).permanent }
 }
 
