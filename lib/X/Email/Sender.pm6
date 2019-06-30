@@ -8,14 +8,22 @@ class Sender is Exception does X::Email::Sender::CommonSending {
     subset NonBlankStr of Str where /\S/;
 
     has NonBlankStr $.message;
+    has Bool $.temporary;
+    has Bool $.permanent;
 
     multi method new(Str $message) {
         self.bless(:$message);
     }
 
+    multi method new(NonBlankStr $message, Bool:D :$permanent!) is default {
+        self.bless(:$message, :permanent, :!temporary);
+    }
+
+    multi method new(NonBlankStr $message, Bool:D :$temporary!) is default {
+        self.bless(:$message, :!permanent, :temporary);
+    }
+
     method code(--> Int) { Nil }
-    method temporary(--> Bool:D) { False }
-    method permanent(--> Bool:D) { False }
 
 }
 

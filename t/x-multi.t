@@ -7,22 +7,9 @@ use Email::Sender::Transport::SMTP;
 
 plan 4;
 
-class X::Email::Sender::Testing is X::Email::Sender {
-    has $.permanent;
-    has $.temporary;
-
-    multi method new($message, :$permanent!) is default {
-        self.bless(:$message, :$permanent, :!temporary);
-    }
-
-    multi method new($message, :$temporary!) is default {
-        self.bless(:$message, :!permanent, :$temporary);
-    }
-}
-
 my $fail = X::Email::Sender.new('generic');
-my $perm = X::Email::Sender::Testing.new('permanent', :permanent);
-my $temp = X::Email::Sender::Testing.new('temporary', :temporary);
+my $perm = X::Email::Sender.new('permanent', :permanent);
+my $temp = X::Email::Sender.new('temporary', :temporary);
 
 subtest 'multi-single-basic', {
     my $multi-fail = X::Email::Sender::Multi.new(

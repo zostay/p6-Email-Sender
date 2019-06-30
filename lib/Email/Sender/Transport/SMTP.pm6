@@ -3,7 +3,7 @@ use v6;
 use Email::Sender::Success::Partial;
 use X::Email::Sender;
 
-use Email::MIME;
+use Email::Simple;
 use Net::SMTP;
 
 unit class Email::Sender::Transport::SMTP;
@@ -33,8 +33,6 @@ my sub handle-smtp-response(Str:D $response) {
 
 class GLOBAL::X::Email::Sender::SMTP is X::Email::Sender {
     has $.code;
-    has Bool $.temporary = False;
-    has Bool $.permanent = False;
 
     multi method new(Response $res) {
         self.bless(
@@ -125,7 +123,7 @@ method !smtp-client(--> Net::SMTP:D) {
     $smtp;
 }
 
-method send-email(Email::MIME $email, :from($env-from), :to(@env-to)) {
+method send-email(Email::Simple $email, :from($env-from), :to(@env-to)) {
     my @to = @env-to.grep({ .defined && .chars });
     die X::Email::Sender.new("no valid addresses in recipient list")
         unless @to;

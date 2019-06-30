@@ -50,7 +50,7 @@ method !sendmail-proc(Str:D $email, :$from, :@to --> Proc) {
     $p;
 }
 
-method send-email(Email::MIME $email, :$from, :@to) {
+method send-email(Email::Simple $email, :$from, :@to) {
     my $serial-email = $email.Str;
     $serial-email ~~ s/\x0d\x0a/\x0a/ unless $*KERNEL.name eq 'win32';
 

@@ -1,7 +1,7 @@
 use v6;
 
 use Email::Sender::Transport::Wrapper;
-use Email::MIME;
+use Email::Simple;
 
 unit class Email::Sender::Transport::Failable is Email::Sender::Transport::Wrapper;
 
@@ -10,7 +10,7 @@ has Callable @.failure-conditions;
 method fail-if(&cond) { @!failure-conditions.push: &cond }
 method clear-failure-conditions() { @!failure-conditions = () }
 
-method send-email(Email::MIME $email, :@to, :$from --> Email::Sender::Success:D) {
+method send-email(Email::Simple $email, :@to, :$from --> Email::Sender::Success:D) {
     for @.failure-conditions -> &cond {
         my $reason = cond($email, :@to, :$from);
         next unless $reason;

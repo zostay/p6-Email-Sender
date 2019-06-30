@@ -12,6 +12,15 @@ unit class Email::Sender::Simple does Email::Sender::Role::CommonSending;
 my Email::Sender::Transport $DEFAULT-TRANSPORT;
 my Bool $DEFAULT-FROM-ENV;
 
+our sub sendmail(|c) is export(:sendmail) {
+    Email::Sender::Simple.send(|c);
+}
+
+method !transport-from-env(--> Email::Sender::Transport) {
+    self.default-transport;
+    return $DEFAULT-FROM-ENV ?? $DEFAULT-TRANSPORT !! Nil;
+}
+
 method default-transport(--> Email::Sender::Transport:D) {
     return $DEFAULT-TRANSPORT if $DEFAULT-TRANSPORT;
 
@@ -59,37 +68,40 @@ method reset-default-transport() {
     $DEFAULT-FROM-ENV  = Nil;
 }
 
-method prepare-envelope(*%arg) {
-    my %env = callsame;
-
-    %(
-        %arg,
-        %env,
-    );
+method prepare-envelope(:@to, :$from, :$transport) {
+    my %env = self.Email::Sender::Role::CommonSending::prepare-envelope(:@to, :$from);
+    %env<transport> = $_ with $transport;
+    %env;
 }
 
 method send-email(
-    Email::MIME $email,
+    Email::Simple $email,
     Email::Sender::Transport :$transport is copy,
-    Str :to(@orig-to),
-    Str :from($orig-from),
+    :to(@orig-to),
+    :from($orig-from),
     --> Email::Sender::Success:D
 ) {
-    $transport //= self.default-transport;
+    # Environment is always preferred
+    with self!transport-from-env {
+        $transport = $_;
+    }
+    else {
+        $transport //= self.default-transport;
+    }
 
     die "transport $transport not safe for use with Email::Sender::Simple"
         unless $transport.is-simple;
 
-    my (@to, $from) = self!get-to-from($email, :to(@orig-to), :from($orig-from));
+    my (@to, $from) := self!get-to-from($email, :to(@orig-to), :from($orig-from));
 
-    die X::Email::Sender::Permanent.new('no recipients') unless  @to;
-    die X::Email::Sender::Permanent.new('no sender')     without $from;
+    die X::Email::Sender.new('no recipients', :permanent) unless  @to;
+    die X::Email::Sender.new('no sender', :permanent)     without $from;
 
     $transport.send($email, :@to, :$from);
 }
 
 method try-to-send(
-    Email::MIME $email,
+    Email::Simple $email,
     Email::Sender::Transport :$transport is copy,
     Str :@to,
     Str :$from,
@@ -110,22 +122,38 @@ method try-to-send(
 }
 
 method !get-to-from($email, :@to, :$from) {
+    my @to-addrs = @to;
     unless @to {
-        my @to-addrs = <to cc>
-            .map({ $email.get-header($^header-name) })
-            .map({ Email::Address.parse(%^to) })
-            .grep(*.defined)
-            .map(*.address);
+        @to-addrs = gather for <to cc> -> $header-name {
+            my $addresses-str = $email.header($header-name);
+            next unless $addresses-str;
+
+            my @addresses = Email::Address.parse(
+                $addresses-str, :addresses,
+            );
+
+            for @addresses {
+                when Email::Address::Mailbox {
+                    take .address.Str;
+                }
+                when Email::Address::Group   {
+                    for .mailbox-list -> $mailbox {
+                        take .address.Str;
+                    }
+                }
+            }
+        }
     }
 
     my $derived-from = $from;
     without $from {
-        ($derived-from) = <from>
-            .map({ $email.get-header($^header-name) })
-            .map({ Email::Address.parse($^from) })
-            .grep(*.defined)
-            .map(*.address);
+        my $from-str  = $email.header('from');
+        with $from-str {
+            $derived-from = Email::Address.parse-one(
+                $from-str, :mailbox
+            ).address.Str;
+        }
     }
 
-    \(@to, $derived-from);
+    (@to-addrs, $derived-from);
 }

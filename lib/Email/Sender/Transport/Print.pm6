@@ -6,7 +6,7 @@ unit class Email::Sender::Transport::Print does Email::Sender::Transport;
 
 has IO::Handle $.handle = $*OUT;
 
-method send-email(Email::MIME $email, :@to, :$from) {
+method send-email(Email::Simple $email, :@to, :$from) {
     $!handle.say("ENVELOPE TO  : {@to.join(', ')}");
     $!handle.say("ENVELOPE FROM: {$from.defined ?? $from !! '-'}");
     $!handle.say("{'-' x 10} begin message");

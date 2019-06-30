@@ -6,7 +6,7 @@ unit class Email::Sender::Transport::Mbox does Email::Sender::Transport;
 
 has IO::Path $.filename = $*CWD.add('mbox');
 
-method send-email(Email::MIME $email, :@to, :$from --> Email::Sender::Success:D) {
+method send-email(Email::Simple $email, :@to, :$from --> Email::Sender::Success:D) {
     my $fh = self!open-fh($.filename);
 
     try {

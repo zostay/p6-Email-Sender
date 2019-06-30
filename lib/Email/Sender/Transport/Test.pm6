@@ -2,19 +2,19 @@ use v6;
 
 use Email::Sender::Transport;
 use X::Email::Sender;
-use Email::MIME;
+use Email::Simple;
 
 unit class Email::Sender::Transport::Test does Email::Sender::Transport;
 
 has Bool $.all-partial-success = False;
 
 method recipient-failure($to) { }
-method delivery-failure(Email::MIME $email, :@to, :$from) { }
+method delivery-failure(Email::Simple $email, :@to, :$from) { }
 
 class Delivery {
-    has Email::MIME $.email;
+    has Email::Simple $.email;
     has %.envelope;
-    has Email::Sender::Success @.successes;
+    has Str @.successes;
     has X::Email::Sender @.failures;
 }
 
@@ -25,7 +25,7 @@ method record-delivery(|c) { @.deliveries.push: Delivery.new(|c) }
 method shift-deliveries(--> Delivery) { @.deliveries.shift }
 method clear-deliveries() { @.deliveries = () }
 
-method send-email(Email::MIME $email, :@to, :$from --> Email::Sender::Success) {
+method send-email(Email::Simple $email, :@to, :$from --> Email::Sender::Success) {
     my @failures;
     my @successes;
 

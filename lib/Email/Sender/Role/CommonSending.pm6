@@ -1,5 +1,6 @@
 use v6;
 
+use Email::Simple;
 use Email::MIME;
 use Email::Sender;
 use Email::Sender::Success;
@@ -21,7 +22,11 @@ role Email::Sender::Role::CommonSending does Email::Sender {
 
     method send-email { ... }
 
-    method send(Email::MIME $email, *%env) {
+    multi method send(Str $email, *%env) {
+        self.send(Email::MIME.new($email), |%env);
+    }
+
+    multi method send(Email::Simple $email, *%env) {
         my %envelope = self.prepare-envelope(|%env);
 
         try {
@@ -39,8 +44,8 @@ role Email::Sender::Role::CommonSending does Email::Sender {
 
     method prepare-envelope(:@to, :$from --> Hash) {
         my %new-env;
-        %new-env<to>   = @to.grep(*.defined).Array;
-        %new-env<from> = $from;
+        %new-env<to>   = .grep(*.defined).Array with @to;
+        %new-env<from> = $_ with $from;
         %new-env;
     }
 

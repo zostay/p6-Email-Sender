@@ -17,8 +17,8 @@ has Bool $.add-envelope-headers = True;
 
 has IO::Path $.dir = $*CWD.add('Maildir');
 
-method send-email(Email::MIME $email, :to(@orig-to), :$from --> Email::Sender::Success::Maildir:D) {
-    my $dupe = Email::MIME.new($email.Str);
+method send-email(Email::Simple $email, :to(@orig-to), :$from --> Email::Sender::Success::Maildir:D) {
+    my $dupe = Email::Simple.new($email.Str);
 
     my @to;
     if $!add-envelope-headers {
@@ -63,7 +63,7 @@ method !ensure-maildir-exists() {
 
 method !add-lines-header($email) {
     return if $email.header("Lines");
-    my $lines = $email.body-str.lines.elems;
+    my $lines = $email.body.lines.elems;
     $email.header-set("Lines", $lines);
 }
 
